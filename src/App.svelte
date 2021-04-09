@@ -5,28 +5,32 @@
 	import type {Links, Nodes} from './types'
 	import Chart from './Chart/Chart.svelte'
 	//import {capitzalizeName} from './utils.svelte'
-let links: any;
-let nodes: any;
+  // if you do that, you should change utils to a raw js file
+
+  let links: any;
+  let nodes: any;
+
 	async function loadLinks (): Promise<Array<Links>> {
-     links = await csv('team_edges_ibm.csv', (d:any) => ({
- 		target: +d.to_team,
- 		source: +d.from_team,
-		value: +d.weight
-}))
-		return links
+    links = await csv('team_edges_ibm.csv', (d:any) => ({
+      target: +d.to_team,
+      source: +d.from_team,
+      value: +d.weight
+    }))
   }
+
 	async function loadNodes (): Promise<Array<Nodes>>{
-     nodes = await csv('teams_ibm.csv', (d:any) => ({
-		team: +d.team,
- 		members: +d.n_members,
+    nodes = await csv('teams_ibm.csv', (d:any) => ({
+      team: +d.team,
+      members: +d.n_members,
   		eff: +d.effeciency_score,
   		innov: +d.innovation_score
-}))
-		return nodes
+    }))
   }
-  
-loadLinks()
-loadNodes()
+
+  onMount(() => {
+    loadLinks()
+    loadNodes()
+  });
 
 </script>
 
@@ -36,12 +40,12 @@ loadNodes()
 	</div>
 	<div id="visual">
 	  {#if links && nodes}
-		<Chart {links} {nodes} />
+		  <Chart {links} {nodes} />
 	  {/if}
 	</div>
-  </div>
+</div>
   
-  <style>
+<style>
 	.wrapper {
 	  width: 95%;
 	  height: 100%;
@@ -61,4 +65,4 @@ loadNodes()
 	  width: 100%;
 	  height: 100vmin;
 	}
-  </style>
+</style>
