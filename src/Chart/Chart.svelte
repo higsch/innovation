@@ -8,77 +8,40 @@
   export let nodes: Nodes[];
   export let links: Links[];
 
-  const move = (x: number, y: number) => `transform: translate(${x}px, ${y}px)`
-  
-  let forces = []
-  
   let width = 0
   let height = 0
-
-  let usedForceNames = []
-  let centerPosition = [200, 200]
 
   let renderedNodes = []
   let membersAccessor = (d: Nodes) => d.members
   let innovAccessor = (d: Nodes) => d.innov
   let teamAccessor = (d: Nodes) => d.team
 
-  let membersExtent = extent(nodes, membersAccessor)
-  let innovationExtent = extent(nodes, innovAccessor)
+  $: rScale = scaleSqrt()
+    .domain(extent(nodes, membersAccessor) as [number, number])
+    .range([2, width / 20])
 
-  let rScale = scaleSqrt()
-    .domain(membersExtent as [number, number])
-    .range([0, 100])
-
-
-  let colorScale = scaleSequential(["#edf5ff", "#001d6c"])
-    .domain(innovationExtent as [number, number])
+  $: colorScale = scaleSequential(["#edf5ff", "#001d6c"])
+    .domain(extent(nodes, innovAccessor) as [number, number])
 
   $: simulation = forceSimulation()
-    .nodes(nodes)
-    //   .force("link", forceLink(links).id((d: Nodes) => d.team))
-    //   .force("charge", forceManyBody())
-    // .force("collide", forceCollide((d: Nodes) => rScale(membersAccessor(d))))
-    //   .force("x", forceX())
-    //   .force("y", forceY())
-      .on('tick', () =>{
+      .nodes(nodes)
+      .force("link", forceLink(links).id((d: Nodes) => teamAccessor(d)))
+      .force("charge", forceManyBody())
+      .force("collide", forceCollide((d: Nodes) => rScale(membersAccessor(d))))
+      .force("x", forceX())
+      .force("y", forceY())
+      .on('tick', () => {
+          // This limits the x y coordinates to the visible space
+          // renderedNodes = [...nodes].map(d => {
+          //   return {
+          //     ...d,
+          //     x: Math.max(-width / 2, Math.min(width / 2, d.x)),
+          //     y: Math.max(-height / 2, Math.min(height / 2, d.y))
+          //   }
+          // })
+
           renderedNodes = [...nodes]
       })
-
-  $: activeForceX = forceX().x(centerPosition[0])
-  $: activeForceY = forceY().y(centerPosition[1])
-  $: activeForceCollide = forceCollide((d: any) => rScale(membersAccessor(d)))
-    .iterations(5)
-  $: activeLink = forceLink(links)    
-    .id((d: any) => teamAccessor(d) as number)
-
-
-  $: forces = [
-      ["x", activeForceX],
-      ["y", activeForceY],
-      ['collide', activeForceCollide],
-      ['link', activeLink],
-      ['charge', forceManyBody()].filter(d => d)
-  ]
-
-  $: {
-      //re-initializes forces when the change 
-      forces.forEach(([name, force]) => {
-          simulation.force(name, force)
-      })
-  }
-
-  //removes old forces
-  const newForceNames = forces.map(([name]) => name)
-  let oldFoceNames = usedForceNames.filter(
-      force => !newForceNames.includes(force)
-  )
-
-  usedForceNames = newForceNames
-
-  // kick our simulation into high gear
-  // simulation.alpha(1)
-  // simulation.restart()
 </script>
 
 
@@ -91,13 +54,17 @@
     width={width}
     height={height}
   >
-    {#each nodes as d}
-      <circle
-        x={d.x}
-        y={d.y}
-        r={rScale(membersAccessor(d))}
-      />
-    {/each}
+    <g transform="translate({width / 2} {height / 2})">
+      {#each renderedNodes as d}
+        <circle
+          cx={d.x}
+          cy={d.y}
+          r={rScale(membersAccessor(d))}
+          stroke="none"
+          fill={colorScale(d.innov)}
+        />
+      {/each}
+    </g>
   </svg>
 </div>
 
@@ -105,6 +72,8 @@
   .wrapper {
     position: relative;
     max-width: 1060px;
+    width: 100%;
+    height: 100%;
     margin: 0 auto;
   }
 </style>

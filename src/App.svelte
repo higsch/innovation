@@ -52,14 +52,17 @@
 	  margin: 0 auto;
 	  font-family: "Fira code", monospace;
 	}
+
 	.header {
 	  width: 100%;
 	  margin: 1.5rem 0;
 	}
+
 	.header h1 {
 	  font-family: 'Myria';
 	  font-size: calc(3rem + 7px);
 	}
+  
 	#visual {
 	  position: relative;
 	  width: 100%;
